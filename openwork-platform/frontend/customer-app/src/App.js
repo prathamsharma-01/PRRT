@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
+import 'leaflet/dist/leaflet.css';
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
+import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import Products from './components/Products';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
@@ -151,7 +154,7 @@ function HomePage() {
     setCartItems(prevItems => {
       // Check if item already exists in cart
       const existingItem = prevItems.find(item => item.id === product.id);
-      
+
       if (existingItem) {
         // Increase quantity if item exists
         return prevItems.map(item => 
@@ -165,7 +168,7 @@ function HomePage() {
         return [...prevItems, newItem];
       }
     });
-    
+
     // Show confirmation animation
     const confirmationDiv = document.createElement('div');
     confirmationDiv.className = 'add-to-cart-confirmation';
@@ -176,15 +179,15 @@ function HomePage() {
       </div>
     `;
     document.body.appendChild(confirmationDiv);
-    
+
     // Remove confirmation after animation
     setTimeout(() => {
       confirmationDiv.classList.add('fade-out');
       setTimeout(() => {
-        document.body.removeChild(confirmationDiv);
+        if (confirmationDiv.parentNode) confirmationDiv.parentNode.removeChild(confirmationDiv);
       }, 500);
     }, 1500);
-    
+
     // Remove isNew flag after animation completes
     setTimeout(() => {
       setCartItems(current => 
@@ -193,8 +196,6 @@ function HomePage() {
         )
       );
     }, 1000);
-    
-    // Cart will only open when toggleCart is called, not automatically when items are added
   };
 
   const updateQuantity = (productId, newQuantity) => {
@@ -388,12 +389,7 @@ function HomePage() {
             <div className="location-right">
               <div className="illustration">
                 {coords ? (
-                  <iframe
-                    title="location-map"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${coords.lng-0.02}%2C${coords.lat-0.02}%2C${coords.lng+0.02}%2C${coords.lat+0.02}&layer=mapnik&marker=${coords.lat}%2C${coords.lng}`}
-                    style={{border:0, width: '100%', height: 160, borderRadius: 12}}
-                    loading="lazy"
-                  />
+                  <MapPreview coords={coords} />
                 ) : (
                   <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="220" height="160" rx="12" fill="#f7f7fb" />
@@ -586,10 +582,29 @@ function HomePage() {
             <div className="footer-left">
               <div className="brand">QuikRy</div>
               <div className="socials">
-                <button className="social-link" aria-label="instagram" onClick={() => window.open('https://instagram.com', '_blank')}>Instagram</button>
-                <button className="social-link" aria-label="twitter" onClick={() => window.open('https://twitter.com', '_blank')}>Twitter</button>
-                <button className="social-link" aria-label="facebook" onClick={() => window.open('https://facebook.com', '_blank')}>Facebook</button>
-                <button className="social-link" aria-label="linkedin" onClick={() => window.open('https://linkedin.com', '_blank')}>LinkedIn</button>
+                <button className="social-link" aria-label="instagram" onClick={() => window.open('https://instagram.com', '_blank')}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                    <rect x="3" y="3" width="18" height="18" rx="5" stroke="#E1306C" strokeWidth="1.5"/>
+                    <path d="M12 7a5 5 0 100 10 5 5 0 000-10z" stroke="#E1306C" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="17.5" cy="6.5" r="0.8" fill="#E1306C" />
+                  </svg>
+                </button>
+                <button className="social-link" aria-label="twitter" onClick={() => window.open('https://twitter.com', '_blank')}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                    <path d="M23 4.5c-.8.4-1.6.6-2.5.8.9-.6 1.6-1.6 1.9-2.7-.9.5-1.9.9-3 1.1C18.2 3 16.9 2.5 15.6 2.5c-2.4 0-4.4 2-4.4 4.4 0 .3 0 .7.1 1C7.7 8 4.1 6 1.7 3.1c-.4.7-.6 1.6-.6 2.4 0 1.6.8 3 2 3.8-.7 0-1.4-.2-2-.6v.1c0 2.1 1.4 3.8 3.3 4.2-.3.1-.6.1-.9.1-.2 0-.4 0-.6-.1.4 1.3 1.6 2.3 3.1 2.3-1.1.9-2.5 1.3-4 1.3H6c1.4.9 3 1.4 4.8 1.4 5.7 0 8.9-4.7 8.9-8.8v-.4c.6-.4 1.1-1 1.5-1.6-.6.3-1.2.5-1.9.6z" fill="#1DA1F2"/>
+                  </svg>
+                </button>
+                <button className="social-link" aria-label="facebook" onClick={() => window.open('https://facebook.com', '_blank')}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                    <path d="M22 12a10 10 0 10-11.6 9.9v-7H8.9v-3h2.5V9.1c0-2.5 1.5-3.8 3.6-3.8 1 0 2 .1 2 .1v2.2h-1.1c-1.1 0-1.4.7-1.4 1.4V12h2.4l-.4 3h-2v7A10 10 0 0022 12z" fill="#1877F2"/>
+                  </svg>
+                </button>
+                <button className="social-link" aria-label="linkedin" onClick={() => window.open('https://linkedin.com', '_blank')}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                    <rect x="2" y="2" width="20" height="20" rx="2" fill="#0A66C2"/>
+                    <path d="M6.5 9.5h2.8v8H6.5v-8zM8.9 7.6c.9 0 1.5.6 1.5 1.4-.0.8-.6 1.4-1.5 1.4s-1.5-.6-1.5-1.4c0-.8.6-1.4 1.5-1.4zM11.6 9.5h2.7v1.1h.1c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.6 2 3.6 4.6v5.9h-2.8v-5.2c0-1.2 0-2.8-1.7-2.8-1.7 0-1.9 1.3-1.9 2.6v5.4h-2.8v-8z" fill="#fff"/>
+                  </svg>
+                </button>
               </div>
               <div className="legal">© QuikRy Marketplace</div>
             </div>
@@ -652,3 +667,49 @@ function App() {
 }
 
 export default App;
+
+// Small MapPreview component — lazy-loads Leaflet and shows a compact map using MapTiler tiles
+function MapPreview({ coords }){
+  const mapRef = useRef(null)
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    let mounted = true
+    const key = process.env.REACT_APP_MAPTILER_KEY
+    import('leaflet').then(L => {
+      if (!mounted) return
+      // Fix default marker icon paths for webpack/CRA
+      if (L && L.Icon && L.Icon.Default) {
+        L.Icon.Default.mergeOptions({
+          iconUrl: markerIconUrl,
+          shadowUrl: markerShadowUrl,
+        })
+      }
+      const map = L.map(containerRef.current, { center: [coords.lat, coords.lng], zoom: 14, attributionControl: false, zoomControl: false })
+      // Prefer MapTiler raster tiles when key available. Use the /tiles/v3/endpoint which
+      // has broad compatibility. If tile requests fail, fall back to OpenStreetMap tiles.
+  // Use MapTiler maps/streets raster tiles (256px) which is compatible and tested.
+  const tileUrl = key ? `https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${key}` : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      const tileLayer = L.tileLayer(tileUrl, { maxZoom: 20 }).addTo(map)
+      tileLayer.on('tileerror', (err) => {
+        console.warn('Map tiles failed, falling back to OSM tiles', err)
+        try {
+          tileLayer.setUrl('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+        } catch(e){}
+      })
+      L.marker([coords.lat, coords.lng]).addTo(map)
+      mapRef.current = map
+    }).catch(err => {
+      console.warn('MapPreview leaflet load failed', err)
+    })
+
+    return () => {
+      mounted = false
+      if (mapRef.current) try { mapRef.current.remove() } catch(e){}
+    }
+  }, [coords])
+
+  return (
+    <div ref={containerRef} style={{width:'100%', height:160, borderRadius:12, overflow:'hidden'}} />
+  )
+}

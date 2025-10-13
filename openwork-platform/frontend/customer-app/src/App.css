@@ -398,6 +398,45 @@ body {
 .search-results li:last-child { border-bottom: none; }
 
 
+/* Social icons styling (footer) - neat, crisp buttons */
+.socials {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff, #fbfbfd);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 6px 18px rgba(10,10,20,0.06);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.social-link svg { width:20px; height:20px; display:block; }
+
+.social-link:hover, .social-link:focus {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  background: linear-gradient(180deg, #fff, #fff); /* subtle brighten */
+}
+
+.social-link:focus { outline: 3px solid rgba(229,57,53,0.12); outline-offset: 3px; }
+
+/* Slightly smaller icons on very small screens */
+@media (max-width: 420px) {
+  .social-link { width: 38px; height: 38px; border-radius: 9px; }
+  .social-link svg { width:18px; height:18px; }
+}
+
+
 .nav-categories::-webkit-scrollbar {
   display: none;
 }
