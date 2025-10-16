@@ -8,11 +8,12 @@
     "openwork-platform/backend/*"
   ],
   "scripts": {
-    "dev": "cd openwork-platform/frontend/customer-app && npm run start",
-    "dev:customer": "cd openwork-platform/frontend/customer-app && npm run start",
-    "dev:seller": "cd openwork-platform/frontend/seller-dashboard && npm run start",
-    "dev:delivery": "cd openwork-platform/frontend/delivery-app && npm run start",
-    "dev:customer-service": "cd openwork-platform/frontend/customer-service-dashboard && npm run start",
+    "dev": "npm run start:customer",
+    "start:customer": "cd openwork-platform/frontend/customer-app && npm start",
+    "start:delivery": "cd openwork-platform/frontend/delivery-app/web && npm start -- --port 5174",
+    "start:seller": "cd openwork-platform/frontend/seller-dashboard/web && npm start -- --port 5175",
+    "start:customer-service": "cd openwork-platform/frontend/customer-service-dashboard/web && npm start -- --port 5176",
+    "start:all": "concurrently -k -n customer,delivery,seller,csr -c blue,magenta,green,yellow \"npm run start:customer\" \"npm run start:delivery\" \"npm run start:seller\" \"npm run start:customer-service\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -21,5 +22,8 @@
     "platform"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }

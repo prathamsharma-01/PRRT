@@ -4,29 +4,14 @@ import './App.css';
 import 'leaflet/dist/leaflet.css';
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
 import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
-import Products from './components/Products';
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
-import Cart from './components/Cart/Cart';
+import Products from './components/Products.jsx';
+import Login from './components/Auth/Login.jsx';
+import Register from './components/Auth/Register.jsx';
+import Cart from './components/Cart/Cart.jsx';
 import HighTechPanel from './components/HighTechDemo/HighTechPanel';
 
-// Import category icons
-import allIcon from './assets/icons/all.svg';
-import homeIcon from './assets/icons/home.svg';
-import toysIcon from './assets/icons/toys.svg';
-import freshIcon from './assets/icons/fresh.svg';
-import electronicsIcon from './assets/icons/electronics.svg';
-import mobilesIcon from './assets/icons/mobiles.svg';
-import beautyIcon from './assets/icons/beauty.svg';
-import fashionIcon from './assets/icons/fashion.svg';
-
-// Import category card images
-import fruitsImage from './assets/category-images/Fruits & Vegetables.jpeg';
-import dairyImage from './assets/category-images/Dairy, Bread & Eggs.webp';
-import riceImage from './assets/category-images/Atta, Rice, Oil & Dals.webp.jpeg';
-import meatImage from './assets/category-images/Meat, Fish & Eggs.jpg.webp';
-import masalaImage from './assets/category-images/Masala & Dry Fruits.jpg';
-import breakfastImage from './assets/category-images/Breakfast & Sauces.jpg';
+// Import all assets from centralized location
+import { icons, categoryImages } from './assets/images.js';
 
 function HomePage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -406,35 +391,35 @@ function HomePage() {
 
       <div className="nav-categories">
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={allIcon} alt="All" className="category-icon" />
+          <img src={icons.all} alt="All" className="category-icon" />
           <span>All</span>
         </button>
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={homeIcon} alt="Home" className="category-icon" />
+          <img src={icons.home} alt="Home" className="category-icon" />
           <span>Home</span>
         </button>
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={toysIcon} alt="Toys" className="category-icon" />
+          <img src={icons.toys} alt="Toys" className="category-icon" />
           <span>Toys</span>
         </button>
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={freshIcon} alt="Fresh" className="category-icon" />
+          <img src={icons.fresh} alt="Fresh" className="category-icon" />
           <span>Fresh</span>
         </button>
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={electronicsIcon} alt="Electronics" className="category-icon" />
+          <img src={icons.electronics} alt="Electronics" className="category-icon" />
           <span>Electronics</span>
         </button>
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={mobilesIcon} alt="Mobiles" className="category-icon" />
+          <img src={icons.mobiles} alt="Mobiles" className="category-icon" />
           <span>Mobiles</span>
         </button>
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={beautyIcon} alt="Beauty" className="category-icon" />
+          <img src={icons.beauty} alt="Beauty" className="category-icon" />
           <span>Beauty</span>
         </button>
         <button className="category" onClick={(e) => e.preventDefault()}>
-          <img src={fashionIcon} alt="Fashion" className="category-icon" />
+          <img src={icons.fashion} alt="Fashion" className="category-icon" />
           <span>Fashion</span>
         </button>
       </div>
@@ -443,7 +428,7 @@ function HomePage() {
         <div className="category-scroll">
           <div className="category-card">
             <div className="category-img">
-              <img src={fruitsImage} alt="Fruits & Vegetables" className="category-card-icon" />
+              <img src={categoryImages.fruits} alt="Fruits & Vegetables" className="category-card-icon" />
             </div>
             <div className="category-content">
               <h3>Fruits & Vegetables</h3>
@@ -452,7 +437,7 @@ function HomePage() {
           
           <div className="category-card">
             <div className="category-img">
-              <img src={dairyImage} alt="Dairy, Bread & Eggs" className="category-card-icon" />
+              <img src={categoryImages.dairy} alt="Dairy, Bread & Eggs" className="category-card-icon" />
             </div>
             <div className="category-content">
               <h3>Dairy, Bread & Eggs</h3>
@@ -461,7 +446,7 @@ function HomePage() {
           
           <div className="category-card">
             <div className="category-img">
-              <img src={riceImage} alt="Atta, Rice, Oil & Dals" className="category-card-icon" />
+              <img src={categoryImages.rice} alt="Atta, Rice, Oil & Dals" className="category-card-icon" />
             </div>
             <div className="category-content">
               <h3>Atta, Rice, Oil & Dals</h3>
@@ -470,7 +455,7 @@ function HomePage() {
           
           <div className="category-card">
             <div className="category-img">
-              <img src={meatImage} alt="Meat, Fish & Eggs" className="category-card-icon" />
+              <img src={categoryImages.meat} alt="Meat, Fish & Eggs" className="category-card-icon" />
             </div>
             <div className="category-content">
               <h3>Meat, Fish & Eggs</h3>
@@ -479,7 +464,7 @@ function HomePage() {
           
           <div className="category-card">
             <div className="category-img">
-              <img src={masalaImage} alt="Masala & Dry Fruits" className="category-card-icon" />
+              <img src={categoryImages.masala} alt="Masala & Dry Fruits" className="category-card-icon" />
             </div>
             <div className="category-content">
               <h3>Masala & Dry Fruits</h3>
@@ -488,7 +473,7 @@ function HomePage() {
           
           <div className="category-card">
             <div className="category-img">
-              <img src={breakfastImage} alt="Breakfast & Sauces" className="category-card-icon" />
+              <img src={categoryImages.breakfast} alt="Breakfast & Sauces" className="category-card-icon" />
             </div>
             <div className="category-content">
               <h3>Breakfast & Sauces</h3>
