@@ -1,0 +1,88 @@
+%% Mermaid: Openwork repository structure (clean high-level)
+%% Render with mermaid.live or a Markdown viewer that supports Mermaid
+
+flowchart TB
+  classDef canonical fill:#e8f5e9,stroke:#2e7d32,color:#000;
+  classDef duplicate fill:#fff3e0,stroke:#ef6c00,color:#000;
+
+  %% Mermaid: Openwork repository structure (annotated)
+  %% This diagram embeds the short recap and key files inside each node
+  %% Render with a Mermaid-capable preview (VS Code Mermaid Preview, mermaid.live, or mermaid-cli)
+
+  flowchart TB
+    %% Styling
+    classDef canonical fill:#e8f5e9,stroke:#2e7d32,color:#000;
+    classDef duplicate fill:#fff3e0,stroke:#ef6c00,color:#000;
+    classDef note fill:#e3f2fd,stroke:#0288d1,color:#000;
+
+    %% Root/top-level
+    Root["Openwork (repo root)\n- README.md\n- image/\n- REPO-STRUCTURE.mmd\n- package.json? (optional)"]
+
+    %% Canonical workspace
+    subgraph CAN[openwork-platform/ (canonical)\n- treat as source-of-truth]
+      direction TB
+      OP_pkg["package.json\n(workspaces & scripts)"]
+      BACK["backend/\n- api-gateway/, user-service/, catalog-service/, ...\n- database/init-mongo.js"]
+      FECAN["frontend/ (canonical)\n- customer-app/, delivery-app/, seller-dashboard/, customer-service-dashboard/, shared-ui/, unified-app/"]
+    end
+
+    %% Duplicates / suspicious copies
+    subgraph DUPS[Duplicate or copied folders (inspect these)]
+      direction TB
+      TOP_FE["/frontend/ (top-level duplicate)\n- likely mirrors openwork-platform/frontend/"]
+      TOP_SU["/shared-ui/ (top-level duplicate)\n- likely mirrors openwork-platform/frontend/shared-ui/"]
+      NESTED["openwork-platform/frontend/openwork-platform/\n- nested copy (copy-of-copy) - inspect immediately\n- contains its own package.json, frontend/, backend/"]
+    end
+
+    %% Connections
+    Root --> CAN
+    Root --> TOP_FE
+    Root --> TOP_SU
+
+    CAN --> OP_pkg
+    CAN --> BACK
+    CAN --> FECAN
+
+    %% Expand canonical frontend contents with key file lists
+    subgraph FE_EXP[Canonical frontend/*]
+      direction LR
+      CUST["customer-app/\n- package.json\n- index.html/public\n- src/main.jsx (or index.js)\n- src/App.jsx\n- src/components/\n- assets/"]
+      DEL["delivery-app/\n- web/ (App.jsx, DeliveryMap.jsx)\n- package.json"]
+      SELL["seller-dashboard/\n- web/ (App.jsx, main.jsx)\n- package.json"]
+      CS["customer-service-dashboard/\n- web/\n- package.json"]
+      SHARED["shared-ui/ (canonical)\n- package.json\n- src/index.jsx (exports)\n- Header.jsx, Footer.jsx, Banner.jsx, LoginCard.jsx\n- shared.css"]
+      UNIFY["unified-app/ (new shell)\n- package.json\n- src/main.jsx\n- src/App.jsx (routes to other apps)"]
+    end
+
+    FECAN --> CUST
+    FECAN --> DEL
+    FECAN --> SELL
+    FECAN --> CS
+    FECAN --> SHARED
+    FECAN --> UNIFY
+
+    %% Nested copy links
+    FECAN --> NESTED
+    NESTED --> N_pkg["package.json (copy)"]
+    NESTED --> N_front["frontend/ (copy)"]
+    N_front --> N_shared["shared-ui/ (duplicated)"]
+
+    %% Top-level duplicates expansion (brief)
+    TOP_FE --> TF_cust["customer-app/ (duplicate)\n- may be identical to canonical customer-app/"]
+    TOP_FE --> TF_others["...delivery-app/, seller-dashboard/, shared-ui/ ... (duplicates)"]
+    TOP_SU --> TS_src["src/\n- Header/Footer/Banner (duplicate)"]
+
+    %% Legend / Recap (embedded in diagram)
+    Recap["Recap:\n- Canonical: openwork-platform/ (keep & run from here)\n- Duplicates: top-level /frontend/, /shared-ui/, nested copy under openwork-platform/frontend/\n- Action: diff duplicates -> backup branch -> remove identical copies"]
+    class Recap note
+
+    %% Styling classes
+    class CAN,OP_pkg,BACK,FECAN,FE_EXP canonical;
+    class TOP_FE,TOP_SU,NESTED,N_front,N_shared duplicate;
+
+    %% How to read hint
+    Hint["How to read: Each node lists key files inside the folder. Use 'diff -ru' to compare paths shown in duplicates.\nIf identical -> safe to remove on a cleanup branch after backup."]
+    class Hint note
+
+    Root --- Recap
+    Root --- Hint

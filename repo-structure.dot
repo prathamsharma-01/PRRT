@@ -1,0 +1,77 @@
+// Graphviz DOT: Openwork repository structure (clean, high-level)
+digraph Openwork {
+  graph [rankdir=TB, fontsize=12, labelloc="t", label="Openwork — repository structure"];
+  node [shape=folder, fontname="Helvetica", fontsize=10];
+
+  // Root
+  openwork [label="openwork/", shape=box];
+
+  // Top-level files
+  openwork -> f1 [label="FOLDER-MIGRATION.md", shape=note];
+  openwork -> f2 [label="IMAGE-ASSETS-SUMMARY.md", shape=note];
+  openwork -> f3 [label="MIGRATION-VITE.md", shape=note];
+  openwork -> f4 [label="package.json", shape=note];
+  openwork -> f5 [label="README.md", shape=note];
+
+  // Major folders
+  openwork -> openwork_platform [label="openwork-platform/"];
+  openwork -> frontend_dup [label="frontend/  (duplicate copy)"];
+  openwork -> shared_ui_top [label="shared-ui/  (duplicate)"];
+
+  // openwork-platform (canonical)
+  openwork_platform -> o_pkg [label="package.json", shape=note];
+  openwork_platform -> o_backend [label="backend/"];
+  openwork_platform -> o_frontend [label="frontend/"];
+
+  // backend services
+  o_backend -> be_analytics [label="analytics-service/"];
+  o_backend -> be_api [label="api-gateway/"];
+  o_backend -> be_catalog [label="catalog-service/"];
+  o_backend -> be_db [label="database/"];
+  be_db -> be_db_init [label="init-mongo.js", shape=note];
+  o_backend -> be_delivery [label="delivery-service/"];
+  o_backend -> be_inventory [label="inventory-service/"];
+  o_backend -> be_notification [label="notification-service/"];
+  o_backend -> be_order [label="order-service/"];
+  o_backend -> be_payment [label="payment-service/"];
+  o_backend -> be_user [label="user-service/"];
+  be_user -> be_user_models [label="models/"];
+  be_user -> be_user_routes [label="routes/"];
+
+  // frontend canonical
+  o_frontend -> fe_pkg [label="package.json", shape=note];
+  o_frontend -> fe_customer [label="customer-app/"];
+  o_frontend -> fe_delivery [label="delivery-app/"];
+  o_frontend -> fe_seller [label="seller-dashboard/"];
+  o_frontend -> fe_support [label="customer-service-dashboard/"];
+  o_frontend -> fe_shared [label="shared-ui/"];
+
+  // customer-app (important files)
+  fe_customer -> ca_app [label="App.js", shape=note];
+  fe_customer -> ca_pkg [label="package.json", shape=note];
+  fe_customer -> ca_src [label="src/ (App.jsx, main.jsx, components/, pages/)"];
+
+  // delivery app (web)
+  fe_delivery -> d_web [label="web/ (App.jsx, DeliveryMap.jsx, Orders.jsx)"];
+
+  // shared-ui (canonical)
+  fe_shared -> su_pkg [label="package.json", shape=note];
+  fe_shared -> su_src [label="src/ (Header.jsx, Footer.jsx, Banner.jsx, shared.css)"];
+
+  // Duplicated/nested copy (noise to clean)
+  o_frontend -> nested_copy [label="openwork-platform/ (nested copy)"];
+  nested_copy -> nested_pkg [label="package.json", shape=note];
+  nested_copy -> nested_frontend [label="frontend/ (copy)"];
+  nested_frontend -> nested_shared [label="shared-ui/ (duplicated copy)"];
+
+  // Top-level duplicate shared-ui
+  openwork -> shared_ui_top_pkg [label="shared-ui/ (top-level duplicate)", shape=folder];
+  shared_ui_top_pkg -> sut_src [label="src/ (Header/Footer/Banner)"];
+
+  // Additional top-level duplicate frontend (artifact)
+  openwork -> frontend_dup_pkg [label="frontend/ (duplicate)", shape=folder];
+  frontend_dup_pkg -> fd_customer [label="customer-app/ (duplicate)"];
+
+  // Visual notes
+  { rank = sink; be_db_init; ca_src; su_src; nested_shared; fd_customer }
+}
