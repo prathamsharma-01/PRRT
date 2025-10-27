@@ -3,3 +3,4 @@ node_modules
 # Ignore environment files containing secrets
 .env.local
 frontend/delivery-app/web/.env.local
+upload/
