@@ -119,7 +119,7 @@ const Cart = ({ isOpen, onClose, cartItems = [], setCartItems, user }) => {
 
       // Open Razorpay checkout
       const paymentOptions = {
-        key: 'rzp_test_RYeRtZfT9mO6LU', // Your actual Razorpay test key
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || orderResponse.key_id, // Get from server response
         amount: orderResponse.order.amount,
         currency: orderResponse.order.currency,
         name: 'QuikRy',

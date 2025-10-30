@@ -13,10 +13,15 @@ const DB_NAME = 'quick-commerce';
 let db;
 let client;
 
-// Initialize Razorpay (using test keys - replace with your actual keys)
+// Initialize Razorpay - Keys must be set in environment variables
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  console.warn('⚠️  WARNING: Razorpay credentials not found in environment variables!');
+  console.warn('⚠️  Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
+}
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_1DP5mmOlF5G5ag', // Test key
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'hazRzp49zn3eXwKzV3RNQ4A4' // Test secret
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
 // Middleware
@@ -284,7 +289,8 @@ app.post('/api/payment/create-order', async (req, res) => {
 
     res.json({
       success: true,
-      order: order
+      order: order,
+      key_id: process.env.RAZORPAY_KEY_ID // Send key to frontend
     });
 
   } catch (error) {

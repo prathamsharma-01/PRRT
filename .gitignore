@@ -1,6 +1,31 @@
 node_modules
 
-# Ignore environment files containing secrets
+# Environment files containing secrets
+.env
 .env.local
+.env.*.local
 frontend/delivery-app/web/.env.local
+**/backend/**/.env
+**/api-gateway/.env
+
+# Uploads and user data
 upload/
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/settings.json
+.idea/
+
+# Build outputs
+dist/
+build/
+*.log
