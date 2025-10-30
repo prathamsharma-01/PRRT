@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -9,16 +9,26 @@ import Login from './components/Auth/Login.jsx';
 import Register from './components/Auth/Register.jsx';
 import Cart from './components/Cart/Cart.jsx';
 import HighTechPanel from './components/HighTechDemo/HighTechPanel';
+import Orders from './pages/Orders.jsx';
+import Profile from './pages/Profile.jsx';
+import AdminSupport from './pages/AdminSupport.jsx';
+import LocationSelector from './components/LocationSelector-v2.jsx';
+import AddressForm from './components/AddressForm.jsx';
 
 // Import all assets from centralized location
 import { icons, categoryImages } from './assets/images.js';
 
 function HomePage() {
+  const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [pincode, setPincode] = useState('136118');
   const [deliveryEstimate, setDeliveryEstimate] = useState('13');
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showProfessionalLocationSelector, setShowProfessionalLocationSelector] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [detectedLocation, setDetectedLocation] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [locationInput, setLocationInput] = useState(pincode);
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState(null);
@@ -27,6 +37,7 @@ function HomePage() {
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState(null)
+  const [user, setUser] = useState(null); // Add user state
   const searchTimer = useRef(null)
   const doSearchNow = async (q) => {
     if (!q) return
@@ -70,6 +81,98 @@ function HomePage() {
             const savedPlace = window.localStorage.getItem('quikry_place');
             if (savedPlace) setPlaceName(savedPlace);
           } catch (e) {}
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  // Check if user is logged in and load their addresses from database
+  useEffect(() => {
+    const loadUserAddresses = async () => {
+      try {
+        const savedUser = window.localStorage.getItem('quikry_user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          
+          // Fetch addresses from database
+          if (userData._id) {
+            try {
+              console.log('📡 Fetching addresses from database for user:', userData._id);
+              const response = await fetch(`http://localhost:8000/api/user/addresses/${userData._id}`);
+              const data = await response.json();
+              
+              if (data.success && data.addresses) {
+                // Update user with database addresses
+                userData.addresses = data.addresses;
+                console.log('✅ Loaded', data.addresses.length, 'addresses from database');
+              } else {
+                console.warn('⚠️ No addresses found in database, using localStorage cache');
+              }
+            } catch (error) {
+              console.error('❌ Error fetching addresses from database:', error);
+              console.warn('Using localStorage cache as fallback');
+            }
+          }
+          
+          setUser(userData);
+          
+          // If user has addresses, use the default one or first one
+          if (userData.addresses && userData.addresses.length > 0) {
+            const defaultAddr = userData.addresses.find(addr => addr.isDefault) || userData.addresses[0];
+            
+            // Create a location object from the address
+            const userLocation = {
+              title: defaultAddr.label || defaultAddr.addressType || 'Saved Address',
+              address: defaultAddr.fullAddress || `${defaultAddr.houseNo}, ${defaultAddr.street}, ${defaultAddr.area}, ${defaultAddr.city}, ${defaultAddr.state} - ${defaultAddr.pincode}`,
+              city: defaultAddr.city,
+              state: defaultAddr.state,
+              pincode: defaultAddr.pincode || defaultAddr.zipCode,
+              houseNo: defaultAddr.houseNo,
+              street: defaultAddr.street,
+              area: defaultAddr.area,
+              landmark: defaultAddr.landmark,
+              type: 'saved',
+              lat: defaultAddr.lat || null,
+              lng: defaultAddr.lng || null
+            };
+            
+            setSelectedLocation(userLocation);
+            setPincode(defaultAddr.pincode || defaultAddr.zipCode || '');
+            setPlaceName(`${defaultAddr.houseNo}, ${defaultAddr.area}`);
+            
+            // Update localStorage cache
+            localStorage.setItem('quikry_user', JSON.stringify(userData));
+            localStorage.setItem('selectedLocation', JSON.stringify(userLocation));
+            
+            console.log('✅ Auto-loaded user default address:', defaultAddr.label || defaultAddr.addressType);
+          }
+        }
+      } catch (e) {
+        console.error('Error loading user addresses:', e);
+      }
+    };
+    
+    loadUserAddresses();
+  }, []);
+
+  // Load saved professional location (only if no user addresses loaded)
+  useEffect(() => {
+    try {
+      // Skip if we already have a selected location from user addresses
+      if (selectedLocation && selectedLocation.type === 'saved') return;
+      
+      const savedLocation = localStorage.getItem('selectedLocation');
+      if (savedLocation) {
+        const location = JSON.parse(savedLocation);
+        setSelectedLocation(location);
+        // Also sync with existing location states
+        setPincode(location.address);
+        setPlaceName(location.title);
+        setLocationInput(location.address);
+        if (location.lat && location.lng) {
+          setCoords({ lat: location.lat, lng: location.lng });
         }
       }
     } catch (e) {
@@ -183,6 +286,215 @@ function HomePage() {
     }, 1000);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('quikry_user');
+    setUser(null);
+    alert('Logged out successfully!');
+  };
+
+  // Professional location handler - opens address form for full details
+  const handleProfessionalLocationSelect = (location) => {
+    console.log('Location selected:', location);
+    console.log('Coordinates received:', location.lat, location.lng);
+    
+    if (location.needsFullAddress) {
+      // Store detected location data and open address form
+      setDetectedLocation({
+        pincode: location.pincode,
+        city: location.city,
+        state: location.state,
+        lat: location.lat,
+        lng: location.lng
+      });
+      console.log('Stored detected location with coords:', location.lat, location.lng);
+      setShowAddressForm(true);
+    } else if (location.type === 'saved') {
+      // User selected an existing saved address
+      setSelectedLocation(location);
+      setPincode(location.pincode || location.zipCode || '');
+      setPlaceName(location.title || `${location.houseNo}, ${location.area}`);
+      setLocationInput(location.address || location.fullAddress);
+      
+      if (location.lat && location.lng) {
+        setCoords({ lat: location.lat, lng: location.lng });
+      }
+      
+      // Save as current selected location
+      try {
+        localStorage.setItem('selectedLocation', JSON.stringify(location));
+        localStorage.setItem('quikry_pincode', location.pincode || location.zipCode || '');
+        localStorage.setItem('quikry_place', location.title || `${location.houseNo}, ${location.area}`);
+        console.log('✅ Saved address selected and set as current location');
+      } catch (e) {
+        console.error('Error saving selected address:', e);
+      }
+    } else {
+      // Fallback: use location as-is
+      setSelectedLocation(location);
+      setPincode(location.pincode || location.address);
+      setPlaceName(location.title);
+      setLocationInput(location.address);
+      
+      if (location.lat && location.lng) {
+        setCoords({ lat: location.lat, lng: location.lng });
+      }
+    }
+    
+    setShowProfessionalLocationSelector(false);
+  };
+
+  // Handle complete address save from form
+  const handleAddressSave = async (addressData) => {
+    console.log('Address saved:', addressData);
+    console.log('detectedLocation coords:', detectedLocation?.lat, detectedLocation?.lng);
+    
+    // Set the complete address
+    const fullLocation = {
+      title: `${addressData.label.charAt(0).toUpperCase() + addressData.label.slice(1)}`,
+      address: addressData.fullAddress,
+      pincode: addressData.pincode,
+      city: addressData.city,
+      state: addressData.state,
+      houseNo: addressData.houseNo,
+      street: addressData.street,
+      area: addressData.area,
+      landmark: addressData.landmark,
+      lat: detectedLocation?.lat,
+      lng: detectedLocation?.lng,
+      addressType: addressData.addressType,
+      customLabel: addressData.customLabel,
+      type: addressData.addressType, // For backward compatibility
+      zipCode: addressData.pincode, // For backward compatibility
+      fullAddress: addressData.fullAddress,
+      label: addressData.label,
+      isDefault: false
+    };
+    
+    console.log('fullLocation with coords:', fullLocation.lat, fullLocation.lng);
+    
+    setSelectedLocation(fullLocation);
+    setPincode(addressData.pincode);
+    setPlaceName(`${addressData.houseNo}, ${addressData.area}`);
+    setLocationInput(addressData.fullAddress);
+    
+    if (detectedLocation?.lat && detectedLocation?.lng) {
+      setCoords({ lat: detectedLocation.lat, lng: detectedLocation.lng });
+      console.log('Coords set:', detectedLocation.lat, detectedLocation.lng);
+    }
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('selectedLocation', JSON.stringify(fullLocation));
+      localStorage.setItem('quikry_pincode', addressData.pincode);
+      localStorage.setItem('quikry_place', `${addressData.houseNo}, ${addressData.area}`);
+      localStorage.setItem('quikry_full_address', addressData.fullAddress);
+      
+      if (detectedLocation?.lat && detectedLocation?.lng) {
+        localStorage.setItem('quikry_coords', JSON.stringify({ 
+          lat: detectedLocation.lat, 
+          lng: detectedLocation.lng 
+        }));
+        console.log('✅ Coordinates saved to localStorage:', detectedLocation.lat, detectedLocation.lng);
+      } else {
+        console.warn('⚠️ No coordinates to save!');
+      }
+
+      // **SAVE ADDRESS TO DATABASE**
+      if (user && user._id) {
+        // Check if this address already exists in localStorage (quick check)
+        const updatedUser = { ...user };
+        if (!updatedUser.addresses) {
+          updatedUser.addresses = [];
+        }
+
+        const existingIndex = updatedUser.addresses.findIndex(
+          addr => addr.houseNo === addressData.houseNo && 
+                  addr.street === addressData.street && 
+                  addr.pincode === addressData.pincode
+        );
+
+        try {
+          if (existingIndex === -1) {
+            // NEW ADDRESS - Save to database
+            console.log('💾 Saving new address to database...');
+            const response = await fetch(`http://localhost:8000/api/user/addresses/${user._id}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(fullLocation)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              // Add the address with its database ID to local state
+              updatedUser.addresses.push(data.address);
+              console.log('✅ Address saved to database successfully');
+              alert(`✅ Address saved permanently! You now have ${updatedUser.addresses.length} saved address${updatedUser.addresses.length > 1 ? 'es' : ''}.`);
+            } else {
+              console.error('Failed to save address:', data.message);
+              alert('❌ Failed to save address to database. Using temporary storage.');
+              // Fallback to localStorage
+              updatedUser.addresses.push(fullLocation);
+            }
+          } else {
+            // EXISTING ADDRESS - Update in database
+            const existingAddress = updatedUser.addresses[existingIndex];
+            if (existingAddress._id) {
+              console.log('💾 Updating existing address in database...');
+              const response = await fetch(`http://localhost:8000/api/user/addresses/${user._id}/${existingAddress._id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(fullLocation)
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                updatedUser.addresses[existingIndex] = { ...fullLocation, _id: existingAddress._id };
+                console.log('✅ Address updated in database successfully');
+                alert('✅ Address updated permanently!');
+              } else {
+                console.error('Failed to update address:', data.message);
+                alert('❌ Failed to update address in database.');
+              }
+            }
+          }
+
+          // Update localStorage cache
+          localStorage.setItem('quikry_user', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+          console.log('✅ User profile synced. Total addresses:', updatedUser.addresses.length);
+
+        } catch (error) {
+          console.error('❌ Error saving to database:', error);
+          alert('❌ Network error. Address saved temporarily. Please check your internet connection.');
+          // Fallback to localStorage only
+          if (existingIndex === -1) {
+            updatedUser.addresses.push(fullLocation);
+          } else {
+            updatedUser.addresses[existingIndex] = fullLocation;
+          }
+          localStorage.setItem('quikry_user', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+      } else {
+        console.warn('⚠️ No user logged in - address not saved permanently');
+        alert('⚠️ Please log in to save addresses permanently!');
+      }
+    } catch (e) {
+      console.error('Error saving address:', e);
+      alert('❌ Error saving address. Please try again.');
+    }
+    
+    // Update delivery estimate
+    setDeliveryEstimate('10-15');
+    setShowAddressForm(false);
+  };
+
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity === 0) {
       // Remove item from cart
@@ -211,11 +523,15 @@ function HomePage() {
             <div className="eta">Delivery in {deliveryEstimate} minutes</div>
             <button
               className="location-pill"
-              onClick={() => setShowLocationModal(true)}
+              onClick={() => setShowProfessionalLocationSelector(true)}
               title={placeName || pincode}
             >
               <span className="pin">📍</span>
-              <span className="loc-text">{placeName ? ` ${placeName.split(',')[0]}` : pincode}</span>
+              <span className="loc-text">
+                {selectedLocation ? selectedLocation.title : 
+                 placeName ? placeName.split(',')[0] : 
+                 pincode === '136118' ? 'Select Location' : pincode}
+              </span>
               <span className="caret">▾</span>
             </button>
           </div>
@@ -223,7 +539,21 @@ function HomePage() {
             <input type="text" placeholder="Search for services and products" />
           </div>
           <div className="user-actions">
-            <Link to="/login" className="login-btn">Login</Link>
+            {user ? (
+              <div className="user-dropdown">
+                <button className="user-btn">
+                  👤 {user.name}
+                  <span className="caret">▾</span>
+                </button>
+                <div className="user-dropdown-menu">
+                  <button onClick={() => navigate('/profile')}>Profile</button>
+                  <button onClick={() => navigate('/orders')}>My Orders</button>
+                  <button onClick={handleLogout}>Logout</button>
+                </div>
+              </div>
+            ) : (
+              <Link to="/login" className="login-btn">Login</Link>
+            )}
             <button className="cart-btn" onClick={toggleCart}>
               🛒 Cart
               {cartItems.length > 0 && (
@@ -236,7 +566,7 @@ function HomePage() {
         </div>
       </header>
       
-      <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} setCartItems={setCartItems} />
+      <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} setCartItems={setCartItems} user={user} />
 
       {/* Location modal (rich) */}
       {showLocationModal && (
@@ -632,6 +962,24 @@ function HomePage() {
       <footer>
         <p>&copy; 2025 QuikRy. All rights reserved.</p>
       </footer>
+
+      {/* Professional Location Selector */}
+      <LocationSelector
+        isOpen={showProfessionalLocationSelector}
+        onClose={() => setShowProfessionalLocationSelector(false)}
+        onLocationSelect={handleProfessionalLocationSelect}
+        currentLocation={selectedLocation}
+      />
+
+      {/* Address Form */}
+      <AddressForm
+        isOpen={showAddressForm}
+        onClose={() => setShowAddressForm(false)}
+        onSave={handleAddressSave}
+        detectedPincode={detectedLocation?.pincode}
+        detectedCity={detectedLocation?.city}
+        detectedState={detectedLocation?.state}
+      />
     </>
   );
 }
@@ -644,6 +992,9 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Register />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<AdminSupport />} />
           <Route path="/demo" element={<HighTechPanel />} />
         </Routes>
       </Router>

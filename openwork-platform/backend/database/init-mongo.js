@@ -7,6 +7,15 @@ db.createCollection('categories');
 db.createCollection('inventory');
 db.createCollection('orders');
 db.createCollection('stores');
+db.createCollection('delivery_agents_performance'); // For tracking agent stats
+db.createCollection('delivery_logs'); // For detailed delivery history
+
+// Create indexes for better performance
+db.orders.createIndex({ "deliveryPersonId": 1, "status": 1 });
+db.orders.createIndex({ "status": 1, "deliveredAt": -1 });
+db.orders.createIndex({ "assignedTo": 1, "status": 1 });
+db.delivery_logs.createIndex({ "agentId": 1, "date": -1 });
+db.delivery_agents_performance.createIndex({ "agentId": 1, "date": -1 });
 
 // Sample Categories
 db.categories.insertMany([
@@ -163,23 +172,127 @@ db.stores.insertMany([
   }
 ]);
 
-// Sample Inventory
-const products = db.products.find().toArray();
-const stores = db.stores.find().toArray();
+// Sample Inventory - Updated for Dark Store Management
+db.inventory.insertMany([
+  {
+    sku: 'SKU001',
+    name: 'Fresh Apples',
+    category: 'Fruits & Vegetables',
+    price: 120,
+    stock: 45,
+    reorderLevel: 20,
+    maxStock: 100,
+    totalSold: 156,
+    image: '/product-images/fresh-apples.jpg',
+    description: 'Fresh, crispy red apples',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    sku: 'SKU002',
+    name: 'Organic Bananas',
+    category: 'Fruits & Vegetables',
+    price: 60,
+    stock: 12,
+    reorderLevel: 25,
+    maxStock: 80,
+    totalSold: 234,
+    image: '/product-images/bananas.jpg',
+    description: 'Organic, ripe bananas',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    sku: 'SKU003',
+    name: 'Fresh Milk',
+    category: 'Dairy & Breakfast',
+    price: 60,
+    stock: 0,
+    reorderLevel: 30,
+    maxStock: 120,
+    totalSold: 512,
+    image: '/product-images/milk.jpg',
+    description: 'Fresh full cream milk - 1L',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    sku: 'SKU004',
+    name: 'Whole Wheat Bread',
+    category: 'Dairy & Breakfast',
+    price: 40,
+    stock: 78,
+    reorderLevel: 15,
+    maxStock: 150,
+    totalSold: 389,
+    image: '/product-images/bread.jpg',
+    description: 'Freshly baked whole wheat bread',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    sku: 'SKU005',
+    name: 'Potato Chips',
+    category: 'Snacks & Beverages',
+    price: 30,
+    stock: 156,
+    reorderLevel: 50,
+    maxStock: 300,
+    totalSold: 678,
+    image: '/product-images/chips.jpg',
+    description: 'Crispy salted potato chips',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    sku: 'SKU006',
+    name: 'Orange Juice',
+    category: 'Snacks & Beverages',
+    price: 80,
+    stock: 5,
+    reorderLevel: 20,
+    maxStock: 100,
+    totalSold: 445,
+    image: '/product-images/orange-juice.jpg',
+    description: 'Fresh squeezed orange juice - 1L',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    sku: 'SKU007',
+    name: 'Detergent Powder',
+    category: 'Household',
+    price: 150,
+    stock: 92,
+    reorderLevel: 10,
+    maxStock: 200,
+    totalSold: 234,
+    image: '/product-images/detergent.jpg',
+    description: 'Premium detergent powder - 1kg',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    sku: 'SKU008',
+    name: 'Tomato Sauce',
+    category: 'Pantry',
+    price: 45,
+    stock: 0,
+    reorderLevel: 15,
+    maxStock: 80,
+    totalSold: 567,
+    image: '/product-images/tomato-sauce.jpg',
+    description: 'Tomato ketchup - 500g',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+]);
 
-products.forEach(product => {
-  stores.forEach(store => {
-    db.inventory.insertOne({
-      _id: ObjectId(),
-      productId: product._id,
-      storeId: store._id,
-      quantity: Math.floor(Math.random() * 100) + 20, // Random quantity between 20-120
-      lowStockThreshold: 10,
-      updatedAt: new Date(),
-      createdAt: new Date()
-    });
-  });
-});
+// Create index for inventory SKU
+db.inventory.createIndex({ "sku": 1 }, { unique: true });
+
+// Sample Users - REMOVED FOR FRESH START
+// Users will be created via registration endpoints
 
 // Create indexes
 db.users.createIndex({ "email": 1 }, { unique: true });

@@ -336,6 +336,84 @@ body {
 }
 .login-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(229,57,53,0.22); }
 
+/* User Dropdown */
+.user-dropdown {
+  position: relative;
+  display: inline-block;
+  margin-right: 12px;
+}
+
+.user-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #e53935, #d32f2f);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(229,57,53,0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.user-btn:hover { 
+  transform: translateY(-3px); 
+  box-shadow: 0 10px 30px rgba(229,57,53,0.22); 
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  padding: 8px 0;
+  min-width: 160px;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.user-dropdown:hover .user-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.user-dropdown-menu button {
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.user-dropdown-menu button:hover {
+  background-color: #f5f5f5;
+  transform: none;
+  box-shadow: none;
+}
+
+.user-dropdown-menu button:last-child {
+  color: #e53935;
+  border-top: 1px solid #eee;
+  margin-top: 4px;
+}
+
+.user-dropdown-menu button:last-child:hover {
+  background-color: #ffebee;
+}
+
 /* Cart Badge */
 .cart-badge {
   position: absolute;
